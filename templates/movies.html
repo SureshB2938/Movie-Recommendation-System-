@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Movie Filter App</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        .rating-circle {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-weight: bold;
+            margin: auto;
+            transition: transform 0.3s ease-in-out;
+            font-size: 12px;
+            box-shadow: 0 0 8px rgba(0, 0, 0, 0.2);
+        }
+        .rating-circle:hover {
+            transform: scale(1.1);
+        }
+        .rating-high { background-color: #28a745; }
+        .rating-medium { background-color: #ffc107; }
+        .rating-low { background-color: #dc3545; }
+        .release-date { font-size: 12px; color: #555; }
+        .movie-poster {
+            max-height: 250px;
+            width: 100%;
+            object-fit: contain;
+        }
+        .load-more-btn {
+            display: flex;
+            justify-content: center;
+            margin-top: 10px;
+        }
+        .spinner {
+            display: none; /* Hide the spinner initially */
+            width: 20px;
+            height: 20px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container-fluid mt-4">
+    <div class="row">
+        <!-- Filter Section (Left side) -->
+        <div class="col-md-3">
+            <h5>Filters</h5>
+            <div class="mb-3">
+                <label for="year" class="form-label">Year</label>
+                <input type="number" class="form-control" id="year" placeholder="Enter year">
+            </div>
+            <div class="mb-3">
+                <label for="language" class="form-label">Language</label>
+                <select class="form-select" id="language">
+                    <option value="">Select Language</option>
+                    <!-- Dynamically populated languages -->
+                </select>
+            </div>
+            <div class="mb-3">
+                <label for="genres" class="form-label">Genres</label>
+                <select class="form-select" id="genres">
+                    <option value="">Select Genre</option>
+                    <option value="Action">Action</option>
+                    <option value="Adventure">Adventure</option>
+                    <option value="Comedy">Comedy</option>
+                    <!-- Add more genres -->
+                </select>
+            </div>
+            <div class="mb-3">
+                <label for="country" class="form-label">Country</label>
+                <select class="form-select" id="country">
+                    <option value="">Select Country</option>
+                    <!-- Dynamically populated countries -->
+                </select>
+            </div>
+            <button class="btn btn-primary w-100" onclick="applyFilter()">Apply Filter</button>
+        </div>
+
+        <!-- Movies Section (Right side) -->
+        <div class="col-md-9">
+            <h4>Now Playing</h4>
+            <div id="now-playing-movies" class="row mb-2"></div>
+            <div class="load-more-btn">
+                <button class="btn btn-outline-primary" id="load-more-now-playing">
+                    Load More 
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/e/e0/Animated-Loading-Gif.gif" class="spinner" alt="Loading...">
+                </button>
+            </div>
+
+            <h4>Upcoming</h4>
+            <div id="upcoming-movies" class="row mb-2"></div>
+            <div class="load-more-btn">
+                <button class="btn btn-outline-primary" id="load-more-upcoming">
+                    Load More 
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/e/e0/Animated-Loading-Gif.gif" class="spinner" alt="Loading...">
+                </button>
+            </div>
+
+            <h4>Top Rated</h4>
+            <div id="top-rated-movies" class="row mb-2"></div>
+            <div class="load-more-btn">
+                <button class="btn btn-outline-primary" id="load-more-top-rated">
+                    Load More 
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/e/e0/Animated-Loading-Gif.gif" class="spinner" alt="Loading...">
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let pageNowPlaying = 1;
+    let pageUpcoming = 1;
+    let pageTopRated = 1;
+    const moviesPerPage = 4;  // Set the number of movies per page
+
+    function getRatingClass(rating) {
+        if (rating >= 7.5) return 'rating-high';
+        if (rating >= 5.0) return 'rating-medium';
+        return 'rating-low';
+    }
+
+    function formatDate(dateStr) {
+        const date = new Date(dateStr);
+        return date.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
+    }
+
+    function displayMovies(movies, containerId, showReleaseDate = false) {
+        movies.forEach(movie => {
+            const ratingClass = getRatingClass(movie.vote_average);
+            const releaseDate = showReleaseDate ? `<p class="release-date">Release Date: ${formatDate(movie.release_date)}</p>` : '';
+
+            $(`#${containerId}`).append(`
+                <div class="col-md-3 mb-4">
+                    <div class="card">
+                        <img src="https://image.tmdb.org/t/p/w200${movie.poster_path}" class="card-img-top movie-poster" alt="${movie.title}">
+                        <div class="card-body text-center">
+                            <h6>${movie.title}</h6>
+                            ${releaseDate}
+                            <div class="rating-circle ${ratingClass}">
+                                ${movie.vote_average.toFixed(1)}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `);
+        });
+    }
+
+    function loadCategoryMovies(category, containerId, page, showReleaseDate = false) {
+        const year = $('#year').val();
+        const language = $('#language').val();
+        const genres = $('#genres').val();
+        const country = $('#country').val();
+        
+        // Show the spinner and disable the button
+        $(`#load-more-${category} .spinner`).show();
+        $(`#load-more-${category}`).prop('disabled', true);
+        
+        // Make the API call with the filters and the page number
+        $.get(`/movies/${category}?page=${page}&per_page=${moviesPerPage}&year=${year}&language=${language}&genres=${genres}&country=${country}`, function(data) {
+            displayMovies(data, containerId, showReleaseDate);
+            
+            // Hide the spinner and enable the button
+            $(`#load-more-${category} .spinner`).hide();
+            $(`#load-more-${category}`).prop('disabled', false);
+        });
+    }
+
+    function applyFilter() {
+        $('#now-playing-movies').empty();
+        $('#upcoming-movies').empty();
+        $('#top-rated-movies').empty();
+
+        pageNowPlaying = 1;
+        pageUpcoming = 1;
+        pageTopRated = 1;
+
+        loadCategoryMovies('now_playing', 'now-playing-movies', pageNowPlaying);
+        loadCategoryMovies('upcoming', 'upcoming-movies', pageUpcoming, true);
+        loadCategoryMovies('top_rated', 'top-rated-movies', pageTopRated);
+    }
+
+    $(document).ready(function() {
+        loadCategoryMovies('now_playing', 'now-playing-movies', pageNowPlaying);
+        loadCategoryMovies('upcoming', 'upcoming-movies', pageUpcoming, true);
+        loadCategoryMovies('top_rated', 'top-rated-movies', pageTopRated);
+
+        $('#load-more-now-playing').click(function() {
+            pageNowPlaying++;
+            loadCategoryMovies('now_playing', 'now-playing-movies', pageNowPlaying);
+        });
+
+        $('#load-more-upcoming').click(function() {
+            pageUpcoming++;
+            loadCategoryMovies('upcoming', 'upcoming-movies', pageUpcoming, true);
+        });
+
+        $('#load-more-top-rated').click(function() {
+            pageTopRated++;
+            loadCategoryMovies('top_rated', 'top-rated-movies', pageTopRated);
+        });
+    });
+</script>
+
+</body>
+</html>

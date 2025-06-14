@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ movie['title'] if movie['title'] else movie['name'] }}</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome for icons -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f4f6f9;
+            font-family: 'Arial', sans-serif;
+        }
+
+        .movie-details {
+            margin-top: 30px;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .movie-poster {
+            width: 250px;
+            height: 375px;
+            object-fit: cover;
+            border-radius: 8px;
+            box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.2);
+        }
+
+        .movie-info {
+            margin-left: 30px;
+            flex: 1;
+            max-width: 600px;
+        }
+
+        .movie-title {
+            font-size: 32px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .genres {
+            margin-top: 10px;
+            font-size: 18px;
+            color: #555;
+        }
+
+        .rating {
+            margin-top: 20px;
+            font-size: 22px;
+            font-weight: bold;
+            color: #007bff;
+        }
+
+        .rating-circle {
+            display: inline-block;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background-color: black;
+            color: white;
+            text-align: center;
+            line-height: 50px;
+            font-size: 22px;
+            font-weight: bold;
+            border: 3px solid;
+        }
+
+        .rating-good {
+            border-color: green;
+        }
+
+        .rating-average {
+            border-color: orange;
+        }
+
+        .rating-poor {
+            border-color: red;
+        }
+
+        .overview {
+            margin-top: 20px;
+            font-size: 18px;
+            color: #555;
+            text-align: justify;
+        }
+
+        .platforms {
+            margin-top: 20px;
+            font-size: 18px;
+        }
+
+        .platform-link {
+            margin-right: 10px;
+        }
+
+        .cast,
+        .reviews-section {
+            margin-top: 20px;
+        }
+
+        .cast .actor {
+            display: inline-block;
+            width: 120px;
+            margin-right: 10px;
+            text-align: center;
+        }
+
+        .actor img {
+            width: 100px;
+            height: 150px;
+            border-radius: 8px;
+            box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.2);
+        }
+
+        .reviews-section p {
+            display: none;
+            font-size: 16px;
+            color: #555;
+            margin-top: 10px;
+        }
+
+        .reviews-toggle {
+            cursor: pointer;
+            color: #007bff;
+            text-decoration: underline;
+        }
+
+        .back-button {
+            margin-top: 30px;
+        }
+
+        .movie-poster {
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .navbar {
+            background-color: #343a40;
+        }
+
+        .navbar .navbar-brand {
+            font-size: 24px;
+            font-weight: bold;
+            color: white;
+        }
+
+        .navbar-caption {
+            color: #bbb;
+            font-size: 14px;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Header Section with Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="/">
+                <img src="{{ url_for('static', filename='media/mrs.gif') }}" alt="Logo" style="width: 50px; height: auto;">
+                MRS
+            </a>
+            <div class="navbar-caption">GATEWAY TO YOUR MOVIES!</div>
+        </div>
+    </nav>
+
+    <!-- Movie Details Section -->
+    <div class="container movie-details">
+        <!-- Movie Poster -->
+        <img src="https://image.tmdb.org/t/p/w500{{ movie['poster_path'] }}" class="movie-poster" alt="{{ movie['title'] if movie['title'] else movie['name'] }}">
+
+        <!-- Movie Info -->
+        <div class="movie-info">
+            <h1 class="movie-title">{{ movie['title'] if movie['title'] else movie['name'] }}</h1>
+
+            <!-- Genres -->
+            <p class="genres">
+                {% for genre in movie['genres'] %}
+                    {{ genre['name'] }}{% if not loop.last %}, {% endif %}
+                {% endfor %}
+            </p>
+
+            <!-- Rating -->
+            <div class="rating">
+                <div class="rating-circle {% if movie['vote_average'] >= 7 %}rating-good{% elif movie['vote_average'] >= 4 %}rating-average{% else %}rating-poor{% endif %}">
+                    {{ movie['vote_average'] }}
+                </div>
+                <span> Rating</span>
+            </div>
+
+            <!-- Overview -->
+            <p class="overview">{{ movie['overview'] if movie['overview'] else 'No description available.' }}</p>
+
+            <!-- Release Date -->
+            <p><strong>Release Date:</strong> {{ movie['release_date'] }}</p>
+
+            <!-- Streaming Platforms -->
+            <div class="platforms">
+                <strong>Available on:</strong>
+                {% for platform in movie['platforms'] %}
+                    <a href="{{ platform['link'] }}" class="platform-link" target="_blank">
+                        <img src="{{ platform['logo'] }}" alt="{{ platform['name'] }}" style="width: 50px; height: 50px; border-radius: 8px;">
+                    </a>
+                {% endfor %}
+            </div>
+
+            <!-- Movie Cast -->
+            <div class="cast">
+                <strong>Cast:</strong>
+                <div class="row">
+                    {% for actor in movie['cast'] %}
+                        <div class="actor col-2">
+                            <img src="https://image.tmdb.org/t/p/w500{{ actor['profile_path'] }}" alt="{{ actor['name'] }}">
+                            <p>{{ actor['name'] }}</p>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Reviews Section -->
+            <div class="reviews-section">
+                <strong>Reviews:</strong>
+                <div class="reviews-toggle" onclick="toggleReviews()">Click to see reviews</div>
+                <p id="reviews">
+                    {% if movie['reviews'] %}
+                        {% for review in movie['reviews'] %}
+                            <strong>{{ review['author'] }}:</strong> {{ review['content'] }}<br>
+                        {% endfor %}
+                    {% else %}
+                        No reviews available for this movie.
+                    {% endif %}
+                </p>
+            </div>
+
+            <!-- Trailer -->
+            {% if movie['youtube_trailer'] %}
+                <h2>Trailer:</h2>
+                <iframe width="560" height="315" 
+                        src="https://www.youtube.com/embed/{{ movie['youtube_trailer']['key'] }}" 
+                        frameborder="0" 
+                        allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" 
+                        allowfullscreen></iframe>
+            {% else %}
+                <p>No trailer available for this movie.</p>
+            {% endif %}
+
+            <!-- Back Button -->
+            <a href="/" class="btn btn-primary back-button">Back to Search</a>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS and Popper.js -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.2/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+    <script>
+        function toggleReviews() {
+            const reviews = document.getElementById('reviews');
+            if (reviews.style.display === "none") {
+                reviews.style.display = "block";
+            } else {
+                reviews.style.display = "none";
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Emotion-Based Movie Recommendations</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        /* Navbar style */
+        .navbar {
+            background-color: #343a40;
+            padding: 10px;
+        }
+
+        .navbar img {
+            width: 40px;
+            height: auto;
+            margin-right: 10px;
+        }
+
+        .navbar .navbar-brand {
+            color: white;
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+
+        .navbar .navbar-nav a {
+            color: white;
+            font-size: 1.1rem;
+        }
+
+        .navbar .navbar-nav a:hover {
+            color: #007bff;
+        }
+
+        .movie-card {
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .movie-card:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        #movie-details {
+            display: none;
+            margin-bottom: 20px;
+        }
+
+        .details-section {
+            display: flex;
+            align-items: flex-start;
+            gap: 20px;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            padding: 15px;
+            background-color: #f9f9f9;
+        }
+
+        .details-poster {
+            max-width: 150px;
+            max-height: 225px;
+            border-radius: 10px;
+        }
+
+        .details-info {
+            flex: 1;
+        }
+
+        .overview-text {
+            margin-top: 10px;
+            font-size: 1.1em;
+            color: #333;
+        }
+
+        .movie-poster {
+            width: 120px;
+            height: 180px;
+            transition: transform 0.3s ease-in-out;
+            border-radius: 10px;
+        }
+
+        .movie-poster.enlarged {
+            width: 150px;
+            height: 225px;
+        }
+
+        .movie-card.clicked {
+            transform: scale(1.05);
+        }
+    </style>
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+</head>
+
+<body>
+ <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <!-- Link to index.html when clicking on the Mrs GIF -->
+    <a class="navbar-brand" href="{{ url_for('index') }}">
+        <img src="{{ url_for('static', filename='media/mrs.gif') }}" alt="Mrs" class="mr-2">
+        GATEWAY TO YOUR MOVIES
+    </a>
+    <!-- Link to movie_chat.html when clicking on the FlickBot GIF -->
+    <div class="ml-auto">
+        <a href="{{ url_for('movie_chat') }}">
+            <img src="{{ url_for('static', filename='media/flickbot.gif') }}" alt="FlickBot">
+        </a>
+    </div>
+</nav>
+
+    <div class="container mt-5">
+        <h1 class="text-center">Emotion-Based Movie Recommendations</h1>
+
+        <!-- Emotion Input (Select Emotion) -->
+        <form id="emotion-form" class="my-4">
+            <div class="form-group">
+                <label for="emotion">Select Your Emotion:</label>
+                <select class="form-control" id="emotion" name="emotion">
+                    <option value="happy">Happy</option>
+                    <option value="sad">Sad</option>
+                    <option value="angry">Angry</option>
+                    <option value="fearful">Fearful</option>
+                    <option value="neutral">Neutral</option>
+                </select>
+            </div>
+            <button type="submit" class="btn btn-primary btn-block">Get Recommendations</button>
+        </form>
+
+        <!-- Emotion Input (Express Emotion via Sentence) -->
+        <form id="sentence-emotion-form" class="my-4">
+            <div class="form-group">
+                <label for="emotion-sentence">Express Your Emotion (e.g., I'm feeling happy):</label>
+                <input type="text" class="form-control" id="emotion-sentence" placeholder="Enter a sentence expressing your emotion">
+            </div>
+            <button type="submit" class="btn btn-success btn-block">Analyze Emotion from Sentence</button>
+        </form>
+
+        <!-- Movie Details Section -->
+        <div id="movie-details" class="my-4">
+            <div class="details-section">
+                <img id="details-poster" class="details-poster" src="" alt="Movie Poster">
+                <div class="details-info">
+                    <h2 id="details-title"></h2>
+                    <p><strong>Rating:</strong> <span id="details-rating"></span></p>
+                    <p><strong>Genres:</strong> <span id="details-genres"></span></p>
+                    <p><strong>Overview:</strong> <span id="details-overview" class="overview-text"></span></p>
+                    <a id="details-trailer" class="btn btn-danger" target="_blank">Watch Trailer</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Movie Recommendations -->
+        <div id="recommendations" class="row"></div>
+    </div>
+
+    <script>
+        $(document).ready(function () {
+            // Hide movie details section initially
+            $('#movie-details').hide();
+
+            // Handle emotion form submission
+            $('#emotion-form').on('submit', function (e) {
+                e.preventDefault();
+                const emotion = $('#emotion').val();
+
+                // Fetch recommendations
+                $.get('/recommend', { emotion: emotion }, function (data) {
+                    const recommendationsDiv = $('#recommendations');
+                    recommendationsDiv.empty();
+
+                    if (data.movies) {
+                        data.movies.forEach(movie => {
+                            const poster = movie.poster_path
+                                ? `https://image.tmdb.org/t/p/w500${movie.poster_path}`
+                                : 'https://via.placeholder.com/500x750?text=No+Image';
+
+                            recommendationsDiv.append(`
+                                <div class="col-md-4">
+                                    <div class="card movie-card mb-4" data-movie-id="${movie.id}">
+                                        <img src="${poster}" class="movie-poster" alt="${movie.title}">
+                                        <div class="card-body">
+                                            <h5 class="card-title">${movie.title}</h5>
+                                            <p><strong>Rating:</strong> ${movie.vote_average}/10</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            `);
+                        });
+                    } else {
+                        recommendationsDiv.append('<p class="text-center">No movies found.</p>');
+                    }
+                });
+            });
+
+            // Handle emotion sentence form submission
+            $('#sentence-emotion-form').on('submit', function (e) {
+                e.preventDefault();
+                const sentence = $('#emotion-sentence').val().toLowerCase();
+
+                // Basic emotion detection using keyword matching
+                let detectedEmotion = 'neutral';  // Default emotion
+                if (sentence.includes('happy') || sentence.includes('joy')) {
+                    detectedEmotion = 'happy';
+                } else if (sentence.includes('sad') || sentence.includes('down')) {
+                    detectedEmotion = 'sad';
+                } else if (sentence.includes('angry') || sentence.includes('rage')) {
+                    detectedEmotion = 'angry';
+                } else if (sentence.includes('fear') || sentence.includes('scared')) {
+                    detectedEmotion = 'fearful';
+                }
+
+                // Trigger recommendation based on detected emotion
+                $.get('/recommend', { emotion: detectedEmotion }, function (data) {
+                    const recommendationsDiv = $('#recommendations');
+                    recommendationsDiv.empty();
+
+                    if (data.movies) {
+                        data.movies.forEach(movie => {
+                            const poster = movie.poster_path
+                                ? `https://image.tmdb.org/t/p/w500${movie.poster_path}`
+                                : 'https://via.placeholder.com/500x750?text=No+Image';
+
+                            recommendationsDiv.append(`
+                                <div class="col-md-4">
+                                    <div class="card movie-card mb-4" data-movie-id="${movie.id}">
+                                        <img src="${poster}" class="movie-poster" alt="${movie.title}">
+                                        <div class="card-body">
+                                            <h5 class="card-title">${movie.title}</h5>
+                                            <p><strong>Rating:</strong> ${movie.vote_average}/10</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            `);
+                        });
+                    } else {
+                        recommendationsDiv.append('<p class="text-center">No movies found.</p>');
+                    }
+                });
+            });
+
+            // Handle movie card click for details
+            $(document).on('click', '.movie-card', function () {
+                const movieId = $(this).data('movie-id');
+
+                // Fetch movie details
+                $.get(`/movie/${movieId}`, function (data) {
+                    const poster = data.poster_path
+                        ? `https://image.tmdb.org/t/p/w500${data.poster_path}`
+                        : 'https://via.placeholder.com/500x750?text=No+Image';
+
+                    $('#details-poster').attr('src', poster);
+                    $('#details-title').text(data.title);
+                    $('#details-rating').text(data.vote_average);
+                    $('#details-genres').text(data.genres.join(', '));
+                    $('#details-trailer').attr('href', data.trailer_url).toggle(!!data.trailer_url);
+                    $('#details-overview').text(data.overview);
+
+                    // Show details section
+                    $('#movie-details').show();
+                });
+
+                // Change poster size on click
+                $(this).find('.movie-poster').addClass('enlarged');
+                $(this).siblings().find('.movie-poster').removeClass('enlarged');
+                $(this).addClass('clicked').siblings().removeClass('clicked');
+            });
+        });
+    </script>
+</body>
+
+</html>

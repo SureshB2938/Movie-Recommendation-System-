@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Movie Recommendation App</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        body {
+            background-color: #1c1c1c;
+            color: #fff;
+        }
+
+        .navbar {
+            background-color: #333;
+        }
+
+        .navbar .navbar-brand img {
+            height: 50px;
+        }
+
+        .navbar .navbar-nav {
+            flex: 1;
+            justify-content: center;
+        }
+
+        .navbar .search-bar input {
+            width: 300px;
+        }
+        
+         .navbar img {
+        width: 100px;  /* Adjust the width as needed */
+        height: 100px;  /* Adjust the height as needed */
+        }
+
+        .movie-card {
+            position: relative;
+            background-color: #444;
+            border-radius: 10px;
+            overflow: hidden;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            text-align: center;
+        }
+
+        .movie-card:hover {
+            transform: scale(1.05);
+            box-shadow: 0 8px 20px rgba(255, 255, 255, 0.2);
+        }
+
+        .movie-card img {
+            width: 100%;
+            height: auto;
+            border-bottom: 2px solid #fff;
+        }
+
+        .movie-card .card-body {
+            padding-left: 60px;
+            text-align: left;
+            position: relative;
+        }
+
+        .rating-circle {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            background-color: #000;
+            color: #fff;
+        }
+
+        /* Rating Colors */
+        .rating-circle.green {
+            border: 3px solid #28a745; /* Green */
+        }
+
+        .rating-circle.orange {
+            border: 3px solid #ffc107; /* Orange */
+        }
+
+        .rating-circle.red {
+            border: 3px solid #dc3545; /* Red */
+        }
+
+        .movie-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin: 10px 0 0 0;
+            text-transform: capitalize;
+        }
+
+        .movie-year {
+            font-size: 14px;
+            color: #aaa;
+            margin-bottom: 10px;
+        }
+
+        .container .row {
+            margin-top: 30px;
+        }
+    </style>
+</head>
+<body>
+   <nav class="navbar navbar-expand-lg navbar-dark">
+    <a class="navbar-brand" href="/">
+        <img src="{{ url_for('static', filename='media/mrs.gif') }}" alt="Logo">
+    </a>
+    <span class="navbar-text">
+        GATE WAY TO YOUR MOVIES
+    </span>
+    <div class="navbar-nav ml-auto">
+        <!-- Search Bar in the center -->
+        <form class="form-inline search-bar" action="/search" method="get">
+            <input class="form-control mr-sm-2" type="text" name="query" placeholder="Search for a movie..." value="{{ request.args.get('query') }}">
+            <button class="btn btn-outline-light" type="submit">Search</button>
+        </form>
+    </div>
+    <div class="navbar-nav ml-auto">
+        <!-- Recommendations Button -->
+        <a class="nav-item nav-link text-light animated-button" href="/recommendations">Recommendations</a>
+    </div>
+    <div class="navbar-nav ml-auto">
+        <!-- Movie Hub Button -->
+        <a class="nav-item nav-link" href="{{ url_for('movie_chat') }}">
+            <img src="{{ url_for('static', filename='media/flickbot.gif') }}" alt="FlickBot" width="50" height="50">
+            Movie Hub
+        </a>
+    </div>
+</nav>
+
+
+<style>
+    /* Basic button style */
+    .animated-button {
+        display: inline-block;
+        padding: 10px 20px;
+        border: 2px solid #fff;
+        border-radius: 5px;
+        text-decoration: none;
+        color: #fff;
+        font-weight: bold;
+        transition: all 0.3s ease-in-out;
+    }
+
+    /* Hover animation */
+    .animated-button:hover {
+        background-color: #007bff; /* Change to desired hover color */
+        transform: scale(1.1); /* Slight scale effect */
+        box-shadow: 0 4px 8px rgba(0, 123, 255, 0.5); /* Box shadow on hover */
+    }
+
+    /* Optional: Add animation on button load */
+    .animated-button {
+        animation: fadeIn 1s ease-in-out;
+    }
+
+    /* Fade-in animation */
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+</style>
+
+ <li class="nav-item">
+<div class="row">
+    {% for movie in search_results %}
+    <div class="col-md-3">
+        <div class="card movie-card">
+            <!-- Clickable Poster -->
+            <a href="/details/movie/{{ movie.id }}">
+                <img src="https://image.tmdb.org/t/p/w500/{{ movie.poster_path }}" alt="{{ movie.title }}" class="card-img-top">
+            </a>
+            <div class="card-body d-flex align-items-center">
+                <!-- Dynamic Rating Circle -->
+                <div class="rating-circle 
+                    {% if movie.vote_average >= 7.0 %}green{% elif movie.vote_average >= 5.0 %}orange{% else %}red{% endif %} me-2">
+                    {{ movie.vote_average | round(1) }}
+                </div>
+                <!-- Clickable Title -->
+                <div>
+                    <h5 class="movie-title mb-1">
+                        <a href="/details/movie/{{ movie.id }}" class="text-decoration-none text-light">{{ movie.title }}</a>
+                    </h5>
+                    <p class="movie-year mb-0">{{ movie.release_date[:4] }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+
+       <!-- Trending Movies -->
+<h2>Trending Movies</h2>
+<div class="row">
+    {% for movie in trending_movies %}
+    <div class="col-md-3">
+        <div class="card movie-card">
+            <!-- Clickable Poster -->
+            <a href="/details/movie/{{ movie.id }}">
+                <img src="https://image.tmdb.org/t/p/w500/{{ movie.poster_path }}" alt="{{ movie.title }}" class="card-img-top">
+            </a>
+            <div class="card-body d-flex align-items-center">
+                <!-- Dynamic Rating Circle -->
+                <div class="rating-circle 
+                    {% if movie.vote_average >= 7.0 %}green{% elif movie.vote_average >= 5.0 %}orange{% else %}red{% endif %} me-2">
+                    {{ movie.vote_average | round(1) }}
+                </div>
+                <!-- Clickable Title -->
+                <div>
+                    <h5 class="movie-title mb-1">
+                        <a href="/details/movie/{{ movie.id }}" class="text-decoration-none text-light">{{ movie.title }}</a>
+                    </h5>
+                    <p class="movie-year mb-0">{{ movie.release_date[:4] }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+
+       <!-- Trending TV Series -->
+<h2>Trending TV Series</h2>
+<div class="row">
+    {% for series in trending_series %}
+    <div class="col-md-3">
+        <div class="card movie-card">
+            <!-- Clickable Poster -->
+            <a href="/details/tv/{{ series.id }}">
+                <img src="https://image.tmdb.org/t/p/w500/{{ series.poster_path }}" alt="{{ series.name }}" class="card-img-top">
+            </a>
+            <div class="card-body d-flex align-items-center">
+                <!-- Dynamic Rating Circle -->
+                <div class="rating-circle 
+                    {% if series.vote_average >= 7.0 %}green{% elif series.vote_average >= 5.0 %}orange{% else %}red{% endif %} me-2">
+                    {{ series.vote_average | round(1) }}
+                </div>
+                <!-- Clickable Title -->
+                <div>
+                    <h5 class="movie-title mb-1">
+                        <a href="/details/tv/{{ series.id }}" class="text-decoration-none text-light">{{ series.name }}</a>
+                    </h5>
+                    <p class="movie-year mb-0">{{ series.first_air_date[:4] }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.3/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</body>
+</html>

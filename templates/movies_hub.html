@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Movies Hub</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        /* Center the content */
+        .container {
+            text-align: center;
+            margin-top: 50px;
+        }
+
+        .feature-button {
+            width: 250px;
+            margin: 10px;
+            font-size: 1.1rem;
+        }
+
+        .header {
+            margin-bottom: 30px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="header">Welcome to the Movies Hub</h1>
+        <p>Select a feature below to explore movies in different ways:</p>
+
+        <div class="d-flex justify-content-center flex-wrap">
+            <!-- Button for Underrated Movies -->
+            <a href="/underrated" class="btn btn-primary feature-button">Underrated Movies</a>
+
+            <!-- Button for Search Movies by Scene -->
+            <a href="/movie_search" class="btn btn-success feature-button">Search Movies by Scene</a>
+
+            <!-- Button for Sentiment Analysis -->
+            <a href="/sentiment" class="btn btn-warning feature-button">Sentiment Analysis</a>
+
+            <!-- Button for Movie Recommendation for a Specific Emotion -->
+            <a href="/emotion_recommendations" class="btn btn-info feature-button">Movie Recommendation for Emotion</a>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
